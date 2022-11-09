@@ -1,0 +1,44 @@
+using namespace RooStats;
+
+void SimpleBayes(    const char* infile =  "GausExpModel.root", 
+                     const char* workspaceName = "w",
+                     const char* modelConfigName = "ModelConfig",
+                     const char* dataName = "data" )
+{
+  /////////////////////////////////////////////////////////////
+  // First part is just to access the workspace file 
+  ////////////////////////////////////////////////////////////
+
+  // open input file 
+  TFile *file = TFile::Open(infile);
+  if (!file) return;
+
+  // get the workspace out of the file
+  RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
+
+
+  // get the modelConfig out of the file
+  RooStats::ModelConfig* mc = (RooStats::ModelConfig*) w->obj(modelConfigName);
+
+  // get the modelConfig out of the file
+  RooAbsData* data = w->data(dataName);
+
+  RooRealVar * nsig = w->var("nsig"); 
+  if (nsig) nsig->setRange(0,200);
+
+  // define reasanable range for nuisance parameters ( +/- 10 sigma around fitted values)
+  // to facilitate the integral
+  RooArgList nuisPar(*mc->GetNuisanceParameters()); 
+  for (int i = 0; i < nuisPar.getSize(); ++i) {       RooRealVar & par = (RooRealVar&) nuisPar[i];      par.setRange(par.getVal()-10*par.getError(), par.getVal()+10*par.getError());   }   BayesianCalculator bayesianCalc(*data,*mc);   bayesianCalc.SetConfidenceLevel(0.683); // 68% interval   // set the type of interval (not really needed for central which is the default)   bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval   //bayesianCalc.SetLeftSideTailFraction(0.); // for upper limit   //bayesianCalc.SetShortestInterval(); // for shortest interval   // set the integration type (not really needed for the default ADAPTIVE)   // possible alternative values are  "VEGAS" , "MISER", or "PLAIN"  (MC integration from libMathMore)    // "TOYMC" (toy MC integration, work when nuisances exist and they have a constraints pdf)   TString integrationType = "";   // this is needed if using TOYMC   if (integrationType.Contains("TOYMC") ) {      RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");     if (nuisPdf) bayesianCalc.ForceNuisancePdf(*nuisPdf);   }   // limit the number of iterations to speed-up the integral    bayesianCalc.SetNumIters(1000);   bayesianCalc.SetIntegrationType(integrationType);    // compute interval by scanning the posterior function   // it is done by default when computing shortest intervals   bayesianCalc.SetScanOfPosterior(50);   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
+
+  SimpleInterval* interval = bayesianCalc.GetInterval();
+  if (!interval) { 
+     cout << "Error computing Bayesian interval - exit " << endl;      return;   }   double lowerLimit = interval->LowerLimit();
+  double upperLimit = interval->UpperLimit();
+
+
+  cout << "\n68% interval on " <<firstPOI->GetName()<<" is : ["<<     lowerLimit << ", "<<     upperLimit <<"] "<<endl;   // draw plot of posterior function   RooPlot * plot = bayesianCalc.GetPosteriorPlot();   if (plot) plot->Draw();  
+
+
+
+}

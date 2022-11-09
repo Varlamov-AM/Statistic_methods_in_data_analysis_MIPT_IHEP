@@ -1,0 +1,21 @@
+https://twiki.cern.ch/twiki/bin/view/RooStats/RooStatsTutorialsJune2013
+
+
+GaussianModel.C Gaussian model and fit it to random generated dat
+GausExpModel.C Fit of a Signal over an Exponential Background 
+CombinedModel.C Fit to a Combined model  based on two channels and we will perform a simultaneous fit on both channels.   RooSimultaneous p.d.f. 
+
+RooStats Exercises 
+SimplePL.C  Profile Likelihood Calculator 
+SimpleMCMC.C Bayesian MCMC Calculator
+SimpleBayes.C Bayesian Numerical Calculator
+CountingModel.C  Create a Poisson Counting Model
+
+ Compute the significance (Hypothesis Test)
+SimpleHypoTest.C    AsymptoticCalculator,Frequentist calculator 
+         ispol'zuetia file GausExpModel.root, kotorii generitsia GausExpModel.C
+s nsig=100 i nbkg = 1000, na nem Frequentist lomaetsia, esli peregenerit' ego s
+nsig=50, nbckg=1000 to OK.
+
+p0Plot.C   Compute significance (p-value) as function of the signal mass 
+SimpleHypoTest.C  Compute Limits using Hypothesis Test Inversion (CLs Limits).
